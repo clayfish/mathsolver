@@ -2,7 +2,7 @@ package com.tucanoo.solver;
 
 
 
-// LP Problem represent the problem to solve
+// LP Problem represent the problem to solve - MUST NOT BE MODIFIED
 public class LPProblem
 {
   /**
