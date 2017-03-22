@@ -1,6 +1,7 @@
 package com.tucanoo.solver;
 
 
+import org.apache.commons.math3.exception.TooManyIterationsException;
 import org.apache.commons.math3.optim.PointValuePair;
 import org.apache.commons.math3.optim.linear.*;
 import org.apache.commons.math3.optim.nonlinear.scalar.GoalType;
@@ -62,45 +63,64 @@ public class LPSolver {
 
             // dave commented out the below not to confuse as I've no idea if it's the correct approach
 
-//            // establish objective
-//            LinearObjectiveFunction objectiveFunction = new LinearObjectiveFunction(problem.c, 0);
-//
-//            // define constraints
-//            Collection constraints = new ArrayList();
-//
-//            // cast int array to double array(testing)
-//            double[] colsArray = new double[problem.getA().size()];
-//            for (int i = 0; i < problem.getA().size(); ++i) {
-//                colsArray[i] = acols[i];
-//            }
-//
-//            // loop over data adding our constraints
-//            for (int i = 0; i < problem.m; i++) {
-//
-//                // determine type of constraint
-//                Relationship relationship = null;
-//                if (problem.rowmark[i] == 0)
-//                    relationship = Relationship.EQ;
-//                else if (problem.rowmark[i] == 1)
-//                    relationship = Relationship.GEQ;
-//                else if (problem.rowmark[i] == 2)
-//                    relationship = Relationship.LEQ;
-//
-//                constraints.add(new LinearConstraint(colsArray,
-//                                    relationship,
-//                                    avals[i]));
-//            }
-//
-//            LinearConstraintSet linearConstraintSet = new LinearConstraintSet(constraints);
-//            // initiate solver and obtain our solution
-//            SimplexSolver ss = new SimplexSolver();
-//            PointValuePair result = ss.optimize(objectiveFunction, linearConstraintSet, GoalType.MINIMIZE);
-//
-//            System.out.println(result.toString());
-//
+            // establish objective
+            LinearObjectiveFunction objectiveFunction = new LinearObjectiveFunction(problem.c, 0);
+
+            // define constraints
+            Collection constraints = new ArrayList();
+
+            // cast int array to double array(testing)
+            double[] colsArray = new double[problem.getA().size()];
+            for (int i = 0; i < problem.getA().size(); ++i) {
+                colsArray[i] = acols[i];
+            }
+
+            // loop over data adding our constraints
+            for (int i = 0; i < problem.m; i++) {
+
+                // determine type of constraint
+                Relationship relationship = null;
+                if (problem.rowmark[i] == 0)
+                    relationship = Relationship.EQ;
+                else if (problem.rowmark[i] == 1)
+                    relationship = Relationship.GEQ;
+                else if (problem.rowmark[i] == 2)
+                    relationship = Relationship.LEQ;
+
+                constraints.add(new LinearConstraint(colsArray,
+                                    relationship,
+                                    avals[i]));
+            }
+
+            LinearConstraintSet linearConstraintSet = new LinearConstraintSet(constraints);
+            // initiate solver and obtain our solution
+            SimplexSolver ss = new SimplexSolver();
+
+            int feasible = 0; // feasible
+
+
+            PointValuePair result = null;
+
+            try {
+                result = ss.optimize(objectiveFunction, linearConstraintSet, GoalType.MINIMIZE);
+                result = ss.doOptimize();
+            } catch (TooManyIterationsException e) {
+                feasible = 1;
+                e.printStackTrace();
+            } catch (UnboundedSolutionException e) {
+                feasible = 1;
+                e.printStackTrace();
+            } catch (NoFeasibleSolutionException e) {
+                feasible = 1;
+                e.printStackTrace();
+            }
+
+
+            System.out.println(result.toString());
+
 
             // need to process apache results into x[] and set infeasible
-            return problem.new Solution(x, infeasible);
+            return problem.new Solution(result.getPoint(), feasible);
 
 
         } else {
