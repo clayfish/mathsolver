@@ -1,70 +1,14 @@
 package com.tucanoo.solver;
 
-
-
-// LP Problem represent the problem to solve - MUST NOT BE MODIFIED
-public class LPProblem
-{
-  /**
-   * Constructor.
-   *
-   * @param nconstraints number of constraints
-   * @param nvariables number of variables
-   */
-  public LPProblem(int nconstraints,
-                   int nvariables )
-  {
-    m = nconstraints;
-    n = nvariables;
-
-    rowmark = new int[m];
-    rowmark[0] = 2;
-    for ( int i = 1; i < m; ++i )
-    {
-      rowmark[i] = 1;
-    }
-
-    b = new double[m];
-    for ( int i = 0; i < m; ++i )
-    {
-      b[i] = 0;
-    }
-
-    A = new SparseMatrix(  );
-
-    c = new double[n];
-    for ( int i = 0; i < n; ++i )
-    {
-      c[i] = 1;
-    }
-
-    l = new double[n];
-    for ( int i = 0; i < n; ++i )
-    {
-      l[i] = 0;
-    }
-
-    u = new double[n];
-    for ( int i = 0; i < n; ++i )
-    {
-      u[i] = 1;
-    }
-
-    rowlab = new String[m];
-    for ( int i = 0; i < m; ++i )
-    {
-      rowlab[i] = new String( "Row " ) + Integer.toString ( i );
-    }
-
-    collab = new String[n];
-    for ( int i = 0; i < n; ++i )
-    {
-      collab[i] = new String( "Col " ) + Integer.toString ( i );
-    }
-  }
+/**
+ * LP Problem represent the problem to solve - MUST NOT BE MODIFIED
+ * 
+ */
+public class LPProblem {
+  static final String marks[] = { "O", ">", "<" };
 
   // instance variables
-    
+  static double maxbnd = 1.1e30;
   SparseMatrix A;
   double b[]; // constraint threshold
   double c[]; // objective fn
@@ -78,390 +22,401 @@ public class LPProblem
   int n; // variables = # columns
   private volatile StringBuffer sb;
 
-
-
   /**
-   * Pretty output of the lp problem.
+   * Constructor.
    *
-   * @return matrices in html
+   * @param nconstraints number of constraints
+   * @param nvariables number of variables
    */
-  public String html (  )
-  {
-    sb = new StringBuffer(  );
-    sb.append ( "<table rules=\"all\" frame=\"box\">" );
-    begrow (  );
-    td ( "label" );
-    for ( int c = 0; c < n; ++c )
-    {
-      td ( collab[c] );
+  public LPProblem(int nconstraints, int nvariables) {
+    m = nconstraints;
+    n = nvariables;
+
+    rowmark = new int[m];
+    rowmark[0] = 2;
+    for (int i = 1; i < m; ++i) {
+      rowmark[i] = 1;
     }
 
-    td ( "target" );
-    endrow (  );
-    for ( int r = 0; r < m; ++r )
-    {
-      begrow (  );
-      td ( rowlab[r] );
-      for ( int c = 0; c < n; ++c )
-      {
-        td ( A.get ( r, c ) );
+    b = new double[m];
+    for (int i = 0; i < m; ++i) {
+      b[i] = 0;
+    }
+
+    A = new SparseMatrix();
+
+    c = new double[n];
+    for (int i = 0; i < n; ++i) {
+      c[i] = 1;
+    }
+
+    l = new double[n];
+    for (int i = 0; i < n; ++i) {
+      l[i] = 0;
+    }
+
+    u = new double[n];
+    for (int i = 0; i < n; ++i) {
+      u[i] = 1;
+    }
+
+    rowlab = new String[m];
+    for (int i = 0; i < m; ++i) {
+      rowlab[i] = "Row " + Integer.toString(i);
+    }
+
+    collab = new String[n];
+    for (int i = 0; i < n; ++i) {
+      collab[i] = "Col " + Integer.toString(i);
+    }
+  }
+
+  private static String stringOf(double a[]) {
+    StringBuilder sb = new StringBuilder();
+    sb.append("{");
+    for (int i = 0; i < a.length; ++i) {
+      if (i > 0) {
+        sb.append(",");
       }
 
-      td ( marks[rowmark[r]] + b[r] );
-      endrow (  );
+      sb.append(a[i]);
     }
 
-    begrow (  );
-    td ( "up" );
-    for ( int c = 0; c < n; ++c )
-    {
-      td ( u[c] );
-    }
-
-    td ( "" );
-    endrow (  );
-    begrow (  );
-    td ( "low" );
-    for ( int c = 0; c < n; ++c )
-    {
-      td ( l[c] );
-    }
-
-    td ( "" );
-    endrow (  );
-    sb.append ( "</table>" );
-    return sb.toString (  );
-  }
-
-
-  public String toString (  )
-  {
-    return html (  );
-  }
-
-
-  private void begrow (  )
-  {
-    sb.append ( "<tr>" );
-  }
-
-
-  private void endrow (  )
-  {
-    sb.append ( "</tr>" );
-  }
-
-
-  private static String stringOf ( double a[] )
-  {
-    StringBuffer sb = new StringBuffer(  );
-    sb.append ( "{" );
-    for ( int i = 0; i < a.length; ++i )
-    {
-      if ( i > 0 )
-      {
-        sb.append ( "," );
-      }
-
-      sb.append ( a[i] );
-    }
-
-    sb.append ( "}" );
-    return sb.toString (  );
-  }
-
-
-  private void td ( String s )
-  {
-    sb.append ( "<td> " + escape ( s ) + " </td>" );
+    sb.append("}");
+    return sb.toString();
   }
 
   // copied from vicar to avoid unexplained classpath cycle problem
   private static String escape(String text) {
-    StringBuffer sb = new StringBuffer();
+    StringBuilder sb = new StringBuilder();
     if (text == null) {
       text = "<null>";
     }
     for (int i = 0; i < text.length(); i++) {
-      char ch = text.charAt(i); if (ch == '<') {
-        sb.append("&lt;"); } else if (ch == '>') {
-          sb.append("&gt;"); } else if (ch == '&') {
-            sb.append("&amp;"); } else {
-              sb.append(ch); }
+      char ch = text.charAt(i);
+      if (ch == '<') {
+        sb.append("&lt;");
+      } else if (ch == '>') {
+        sb.append("&gt;");
+      } else if (ch == '&') {
+        sb.append("&amp;");
+      } else {
+        sb.append(ch);
+      }
     }
     return sb.toString();
   }
 
-  private void td ( double d )
-  {
-    td ( Double.toString ( d ) );
-  }
-
-
-
-
-  public class Solution
-  {
-    public Solution ( double x[],
-               int infeasible )
-    {
-      this.x = x;
-      this.infeasible = infeasible;
-    }
-
-    public void check ( double tol ) {
-      for ( int c = 0; c < n; ++c ) {
-        double s = x[c];
-        if ( s < l[c] - tol )
-          System.err.println ( "check: " + collab[c] + ": " + s + " < " + l[c] );
-        if ( s > u[c] + tol )
-          System.err.println ( "check: " + collab[c] + ": " + s + " > " + u[c] );
-      }
-
-      double[] forms = new double[m];
-      int[] arows = new int[A.size()];
-      int[] acols = new int[A.size()];
-      double[] avals = new double[A.size()];
-      A.dump(arows,acols,avals);
-      for ( int i = 0; i < A.size(); ++i ) {
-        forms[arows[i]] += x[acols[i]] * avals[i];
-      }
-      for ( int r = 0; r < m; ++r ) {
-        if ( rowmark[r] == 1 ) {
-          if ( forms[r] > b[r] + tol )
-            System.err.println ( "check: " + rowlab[r] + ": " + forms[r]
-                + " > " + b[r] );
-        } else if ( rowmark[r] == 2 ) {
-          if ( forms[r] < b[r] - tol )
-            System.err.println ( "check: " + rowlab[r] + ": " + forms[r]
-                + " < " + b[r] );
-        } else {
-        }
-      }
-    }
-    public String html (  )
-    {
-      sb = new StringBuffer(  );
-      sb.append ( "<table rules=\"all\" frame=\"box\"><tbody><tr>" );
-      for ( int i = 0; i < x.length; ++i )
-      {
-        sb.append ( "<td>" + x[i] + "</td>" );
-      }
-
-      return sb.toString (  ) + "</tr></tbody></table>";
-    }
-
-
-
-    public String toString (  )
-    {
-      return (infeasible==1 ? "infeasib" : "feasible") + ": " + stringOf ( x );
-    }
-
-    public double x[]; // solution
-    public int infeasible = 0;
-  }
-
-  static final String marks[] = { "O", ">", "<" };
-  static double maxbnd = 1.1e30;
   /**
    * @return
    */
-  public static String[] getMarks()
-  {
+  public static String[] getMarks() {
     return marks;
   }
 
   /**
    * @return
    */
-  public static double getMaxbnd()
-  {
+  public static double getMaxbnd() {
     return maxbnd;
-  }
-
-  /**
-   * @return
-   */
-  public SparseMatrix getA()
-  {
-    return A;
-  }
-
-  /**
-   * @return
-   */
-  public double[] getB()
-  {
-    return b;
-  }
-
-  /**
-   * @return
-   */
-  public double[] getC()
-  {
-    return c;
-  }
-
-  /**
-   * @return
-   */
-  public String[] getCollab()
-  {
-    return collab;
-  }
-
-  /**
-   * @return
-   */
-  public double[] getL()
-  {
-    return l;
-  }
-
-  /**
-   * @return
-   */
-  public int getM()
-  {
-    return m;
-  }
-
-  /**
-   * @return
-   */
-  public int getMaxflag()
-  {
-    return maxflag;
-  }
-
-  /**
-   * @return
-   */
-  public int getN()
-  {
-    return n;
-  }
-
-  /**
-   * @return
-   */
-  public String[] getRowlab()
-  {
-    return rowlab;
-  }
-
-  /**
-   * @return
-   */
-  public int[] getRowmark()
-  {
-    return rowmark;
-  }
-
-  /**
-   * @return
-   */
-  public double[] getU()
-  {
-    return u;
   }
 
   /**
    * @param d
    */
-  public static void setMaxbnd(double d)
-  {
+  public static void setMaxbnd(double d) {
     maxbnd = d;
+  }
+
+  /**
+   * Pretty output of the lp problem.
+   *
+   * @return matrices in html
+   */
+  public String html() {
+    sb = new StringBuffer();
+    sb.append("<table rules=\"all\" frame=\"box\">");
+    begrow();
+    td("label");
+    for (int c = 0; c < n; ++c) {
+      td(collab[c]);
+    }
+
+    td("target");
+    endrow();
+    for (int r = 0; r < m; ++r) {
+      begrow();
+      td(rowlab[r]);
+      for (int c = 0; c < n; ++c) {
+        td(A.get(r, c));
+      }
+
+      td(marks[rowmark[r]] + b[r]);
+      endrow();
+    }
+
+    begrow();
+    td("up");
+    for (int c = 0; c < n; ++c) {
+      td(u[c]);
+    }
+
+    td("");
+    endrow();
+    begrow();
+    td("low");
+    for (int c = 0; c < n; ++c) {
+      td(l[c]);
+    }
+
+    td("");
+    endrow();
+    sb.append("</table>");
+    return sb.toString();
+  }
+
+  public String toString() {
+    return html();
+  }
+
+  private void begrow() {
+    sb.append("<tr>");
+  }
+
+  private void endrow() {
+    sb.append("</tr>");
+  }
+
+  private void td(String s) {
+    sb.append("<td> " + escape(s) + " </td>");
+  }
+
+  private void td(double d) {
+    td(Double.toString(d));
+  }
+
+  /**
+   * @return
+   */
+  public SparseMatrix getA() {
+    return A;
   }
 
   /**
    * @param matrix
    */
-  public void setA(SparseMatrix matrix)
-  {
+  public void setA(SparseMatrix matrix) {
     A = matrix;
   }
 
   /**
+   * @return
+   */
+  public double[] getB() {
+    return b;
+  }
+
+  /**
    * @param ds
    */
-  public void setB(double[] ds)
-  {
+  public void setB(double[] ds) {
     b = ds;
   }
 
   /**
+   * @return
+   */
+  public double[] getC() {
+    return c;
+  }
+
+  /**
    * @param ds
    */
-  public void setC(double[] ds)
-  {
+  public void setC(double[] ds) {
     c = ds;
   }
 
   /**
+   * @return
+   */
+  public String[] getCollab() {
+    return collab;
+  }
+
+  /**
    * @param strings
    */
-  public void setCollab(String[] strings)
-  {
+  public void setCollab(String[] strings) {
     collab = strings;
+  }
+
+  /**
+   * @return
+   */
+  public double[] getL() {
+    return l;
   }
 
   /**
    * @param ds
    */
-  public void setL(double[] ds)
-  {
+  public void setL(double[] ds) {
     l = ds;
   }
 
   /**
+   * @return
+   */
+  public int getM() {
+    return m;
+  }
+
+  /**
    * @param i
    */
-  public void setM(int i)
-  {
+  public void setM(int i) {
     m = i;
   }
 
   /**
-   * @param i
+   * @return
    */
-  public void setMaxflag(int i)
-  {
-    maxflag = i;
+  public int getMaxflag() {
+    return maxflag;
   }
 
   /**
    * @param i
    */
-  public void setN(int i)
-  {
+  public void setMaxflag(int i) {
+    maxflag = i;
+  }
+
+  /**
+   * @return
+   */
+  public int getN() {
+    return n;
+  }
+
+  /**
+   * @param i
+   */
+  public void setN(int i) {
     n = i;
+  }
+
+  /**
+   * @return
+   */
+  public String[] getRowlab() {
+    return rowlab;
   }
 
   /**
    * @param strings
    */
-  public void setRowlab(String[] strings)
-  {
+  public void setRowlab(String[] strings) {
     rowlab = strings;
+  }
+
+  /**
+   * @return
+   */
+  public int[] getRowmark() {
+    return rowmark;
   }
 
   /**
    * @param is
    */
-  public void setRowmark(int[] is)
-  {
+  public void setRowmark(int[] is) {
     rowmark = is;
+  }
+
+  /**
+   * @return
+   */
+  public double[] getU() {
+    return u;
   }
 
   /**
    * @param ds
    */
-  public void setU(double[] ds)
-  {
+  public void setU(double[] ds) {
     u = ds;
+  }
+
+  /**
+   *
+   */
+  public class Solution {
+    public double x[]; // solution
+    public int infeasible = 0;
+
+    /**
+     *
+     * @param x
+     * @param infeasible
+     */
+    public Solution(double x[], int infeasible) {
+      this.x = x;
+      this.infeasible = infeasible;
+    }
+
+    /**
+     *
+     * @param tol
+     */
+    public void check(double tol) {
+      for (int c = 0; c < n; ++c) {
+        double s = x[c];
+        if (s < l[c] - tol)
+          System.err.println("check: " + collab[c] + ": " + s + " < " + l[c]);
+        if (s > u[c] + tol)
+          System.err.println("check: " + collab[c] + ": " + s + " > " + u[c]);
+      }
+
+      double[] forms = new double[m];
+      int[] arows = new int[A.size()];
+      int[] acols = new int[A.size()];
+      double[] avals = new double[A.size()];
+      A.dump(arows, acols, avals);
+      for (int i = 0; i < A.size(); ++i) {
+        forms[arows[i]] += x[acols[i]] * avals[i];
+      }
+      for (int r = 0; r < m; ++r) {
+        if (rowmark[r] == 1) {
+          if (forms[r] > b[r] + tol)
+            System.err.println("check: " + rowlab[r] + ": " + forms[r] + " > " + b[r]);
+        } else if (rowmark[r] == 2) {
+          if (forms[r] < b[r] - tol)
+            System.err.println("check: " + rowlab[r] + ": " + forms[r] + " < " + b[r]);
+        } else {
+        }
+      }
+    }
+
+    /**
+     *
+     * @return
+     */
+    public String html() {
+      sb = new StringBuffer();
+      sb.append("<table rules=\"all\" frame=\"box\"><tbody><tr>");
+      for (double aX : x) {
+        sb.append("<td>").append(aX).append("</td>");
+      }
+
+      return sb.toString() + "</tr></tbody></table>";
+    }
+
+    @Override
+    public String toString() {
+      return (infeasible == 1 ? "infeasib" : "feasible") + ": " + stringOf(x);
+    }
   }
 
 }
