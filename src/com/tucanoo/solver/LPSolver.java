@@ -61,66 +61,66 @@ public class LPSolver {
 
             // in here we will prepare the parameters to pass to Apache Math and call solve()
 
-            // dave commented out the below not to confuse as I've no idea if it's the correct approach
+            // code below is commented as this is what needs to be developed - this was just an initial attempt.
 
-            // establish objective
-            LinearObjectiveFunction objectiveFunction = new LinearObjectiveFunction(problem.c, 0);
-
-            // define constraints
-            Collection constraints = new ArrayList();
-
-            // cast int array to double array(testing)
-            double[] colsArray = new double[problem.getA().size()];
-            for (int i = 0; i < problem.getA().size(); ++i) {
-                colsArray[i] = acols[i];
-            }
-
-            // loop over data adding our constraints
-            for (int i = 0; i < problem.m; i++) {
-
-                // determine type of constraint
-                Relationship relationship = null;
-                if (problem.rowmark[i] == 0)
-                    relationship = Relationship.EQ;
-                else if (problem.rowmark[i] == 1)
-                    relationship = Relationship.GEQ;
-                else if (problem.rowmark[i] == 2)
-                    relationship = Relationship.LEQ;
-
-                constraints.add(new LinearConstraint(colsArray,
-                                    relationship,
-                                    avals[i]));
-            }
-
-            LinearConstraintSet linearConstraintSet = new LinearConstraintSet(constraints);
-            // initiate solver and obtain our solution
-            SimplexSolver ss = new SimplexSolver();
-
-            int feasible = 0; // feasible
-
-
-            PointValuePair result = null;
-
-            try {
-                result = ss.optimize(objectiveFunction, linearConstraintSet, GoalType.MINIMIZE);
-                result = ss.doOptimize();
-            } catch (TooManyIterationsException e) {
-                feasible = 1;
-                e.printStackTrace();
-            } catch (UnboundedSolutionException e) {
-                feasible = 1;
-                e.printStackTrace();
-            } catch (NoFeasibleSolutionException e) {
-                feasible = 1;
-                e.printStackTrace();
-            }
-
-
-            System.out.println(result.toString());
-
-
-            // need to process apache results into x[] and set infeasible
-            return problem.new Solution(result.getPoint(), feasible);
+//            // establish objective
+//            LinearObjectiveFunction objectiveFunction = new LinearObjectiveFunction(problem.c, 0);
+//
+//            // define constraints
+//            Collection constraints = new ArrayList();
+//
+//            // cast int array to double array(testing)
+//            double[] colsArray = new double[problem.getA().size()];
+//            for (int i = 0; i < problem.getA().size(); ++i) {
+//                colsArray[i] = acols[i];
+//            }
+//
+//            // loop over data adding our constraints
+//            for (int i = 0; i < problem.m; i++) {
+//
+//                // determine type of constraint
+//                Relationship relationship = null;
+//                if (problem.rowmark[i] == 0)
+//                    relationship = Relationship.EQ;
+//                else if (problem.rowmark[i] == 1)
+//                    relationship = Relationship.GEQ;
+//                else if (problem.rowmark[i] == 2)
+//                    relationship = Relationship.LEQ;
+//
+//                constraints.add(new LinearConstraint(colsArray,
+//                                    relationship,
+//                                    avals[i]));
+//            }
+//
+//            LinearConstraintSet linearConstraintSet = new LinearConstraintSet(constraints);
+//            // initiate solver and obtain our solution
+//            SimplexSolver ss = new SimplexSolver();
+//
+//            int infeasible = 0; // feasible
+//
+//
+//            PointValuePair result = null;
+//
+//            try {
+//                result = ss.optimize(objectiveFunction, linearConstraintSet, GoalType.MINIMIZE);
+//                result = ss.doOptimize();
+//            } catch (TooManyIterationsException e) {
+//                infeasible = 1;
+//                e.printStackTrace();
+//            } catch (UnboundedSolutionException e) {
+//                infeasible = 1;
+//                e.printStackTrace();
+//            } catch (NoFeasibleSolutionException e) {
+//                infeasible = 1;
+//                e.printStackTrace();
+//            }
+//
+//
+//            System.out.println(result.toString());
+//
+//
+//            // need to process apache results into x[] and set infeasible
+//            return problem.new Solution(result.getPoint(), infeasible);
 
 
         } else {
